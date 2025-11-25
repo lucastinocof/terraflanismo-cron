@@ -1,0 +1,37 @@
+name: Fetch Lists (Supabase)
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  fetch_lists:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call scrape_ge
+        run: curl -X GET "${{ secrets.SUPABASE_GE }}"
+
+      - name: Call scrape_uol
+        run: curl -X GET "${{ secrets.SUPABASE_UOL }}"
+
+      - name: Call scrape_espn
+        run: curl -X GET "${{ secrets.SUPABASE_ESPN }}"
+
+      - name: Call scrape_lance
+        run: curl -X GET "${{ secrets.SUPABASE_LANCE }}"
+
+      - name: Call scrape_colunadofla
+        run: curl -X GET "${{ secrets.SUPABASE_COLUNADOFLA }}"
+
+      - name: Call scrape_oglobo
+        run: curl -X GET "${{ secrets.SUPABASE_OGLOBO }}"
+
+      - name: Call scrape_itatiaia
+        run: curl -X GET "${{ secrets.SUPABASE_ITATIAIA }}"
+
+      - name: Call scrape_cnn
+        run: curl -X GET "${{ secrets.SUPABASE_CNN }}"
+
+      - name: Call scrape_mundobola
+        run: curl -X GET "${{ secrets.SUPABASE_MUNDOBOLA }}"
