@@ -1,0 +1,13 @@
+name: Process Content (Supabase)
+
+on:
+  schedule:
+    - cron: "* * * * *"
+  workflow_dispatch:
+
+jobs:
+  process_content:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call scrape_content
+        run: curl -X GET "${{ secrets.SUPABASE_SCRAPE_CONTENT }}"
