@@ -19,9 +19,11 @@ jobs:
           node-version: 18
 
       - name: Install dependencies
-        run: |
-          npm install axios@1.6.7
-          npm install cheerio
+       run: |
+        npm init -y
+        npm install axios@0.27.2 cheerio@1.0.0-rc.12
+        node -e "console.log('axios versão:', require('axios/package.json').version)"
+
 
       - name: Run Lance scraper
         run: node .github/scripts/scrape_lance.js
