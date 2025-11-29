@@ -21,6 +21,7 @@ async function main() {
         Accept: "text/html",
         "Accept-Language": "pt-BR,pt;q=0.9",
       },
+      timeout: 15000,
       validateStatus: () => true,
     });
 
@@ -36,33 +37,47 @@ async function main() {
     const items = [];
     const seen = new Set();
 
-    // pega todos os links que têm "/flamengo/" na URL
+    // Seleciona somente cards reais
     $("a[href*='/flamengo/']").each((_, el) => {
       const href = $(el).attr("href");
       if (!href) return;
+
+      // Ignora links inúteis de navegação
+      if (href.includes("#") || href.length < 15) return;
 
       const url = href.startsWith("http")
         ? href
         : `https://www.lance.com.br${href}`;
 
+      // evita duplicados
       if (seen.has(url)) return;
       seen.add(url);
 
-      const rawTitle = $(el).text().trim();
-      if (!rawTitle || rawTitle.length < 8) return;
+      let title = $(el).text().trim();
+      title = title.replace(/\s+/g, " "); // normaliza múltiplos espaços
 
-      // tenta achar imagem no card mais próximo
+      if (!title || title.length < 8) return;
+
+      // tenta achar imagem do card
       let image = null;
       const $card = $(el).closest("article, div");
-      const imgSrc =
-        $card.find("img").attr("src") || $card.find("img").attr("data-src");
-      if (imgSrc) {
-        image = imgSrc.startsWith("http")
-          ? imgSrc
-          : `https://www.lance.com.br${imgSrc}`;
+
+      const img =
+        $card.find("img").attr("src") ||
+        $card.find("img").attr("data-src") ||
+        null;
+
+      if (img) {
+        image = img.startsWith("http")
+          ? img
+          : `https://www.lance.com.br${img}`;
       }
 
-      items.push({ title: rawTitle, url, image });
+      items.push({
+        title,
+        url,
+        image,
+      });
     });
 
     console.log("Links encontrados no HTML:", items.length);
@@ -72,7 +87,7 @@ async function main() {
       return;
     }
 
-    // insere no Supabase (limite 30)
+    // Enviar para o Supabase
     for (const item of items.slice(0, 30)) {
       try {
         const res = await axios.post(
@@ -91,6 +106,7 @@ async function main() {
               "Content-Type": "application/json",
               Prefer: "resolution=merge-duplicates",
             },
+            timeout: 15000,
           }
         );
 
