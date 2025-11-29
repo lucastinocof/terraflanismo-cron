@@ -1,5 +1,4 @@
 const axios = require("axios");
-const cheerio = require("cheerio");
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE;
@@ -12,65 +11,39 @@ async function main() {
   }
 
   try {
-    const pageUrl = "https://www.lance.com.br/flamengo";
+    const apiUrl = "https://content-api-lance.com.br/api/v1/posts?team=flamengo&page=1";
 
-    const resp = await axios.get(pageUrl, {
+    const resp = await axios.get(apiUrl, {
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/128 Safari/537.36",
-        Accept: "text/html",
-        "Accept-Language": "pt-BR,pt;q=0.9",
+        "User-Agent": "Mozilla/5.0",
+        Accept: "application/json",
       },
       validateStatus: () => true,
     });
 
-    console.log("Status HTTP Lance:", resp.status);
+    console.log("Status HTTP Lance API:", resp.status);
 
-    if (resp.status >= 400) {
-      console.log("Não deu pra acessar a página do Lance.");
+    if (resp.status >= 400 || !resp.data?.data) {
+      console.log("Erro ao acessar API do Lance.");
       return;
     }
 
-    const $ = cheerio.load(resp.data);
+    const posts = resp.data.data;
+    console.log("Posts encontrados:", posts.length);
 
-    const items = [];
-    const seen = new Set();
+    for (const post of posts.slice(0, 30)) {
+      const title = post.title?.trim();
+      const url = `https://www.lance.com.br/${post.slug}`;
+      const image = post?.featured_media?.url || null;
 
-    // pega todos os links que têm "/flamengo/" na URL
-    $("a[href*='/flamengo/']").each((_, el) => {
-      const href = $(el).attr("href");
-      if (!href) return;
-
-      const url = href.startsWith("http")
-        ? href
-        : `https://www.lance.com.br${href}`;
-
-      if (seen.has(url)) return;
-      seen.add(url);
-
-      const title = $(el).text().trim();
-      if (!title || title.length < 8) return;
-
-      items.push({ title, url });
-    });
-
-    console.log("Links encontrados no HTML:", items.length);
-
-    if (items.length === 0) {
-      console.log("Nenhum link de Flamengo encontrado.");
-      return;
-    }
-
-    // insere no Supabase
-    for (const item of items.slice(0, 30)) {
       try {
         const res = await axios.post(
           `${SUPABASE_URL}/rest/v1/pending_articles`,
           {
             source_id: LANCE_SOURCE_ID,
-            title: item.title,
-            url: item.url,
-            image_url: null,
+            title,
+            url,
+            image_url: image,
             processed: false,
           },
           {
@@ -83,16 +56,11 @@ async function main() {
           }
         );
 
-        console.log(
-          "Inserido:",
-          item.title.slice(0, 60),
-          "- status:",
-          res.status
-        );
+        console.log("Inserido:", title, "status:", res.status);
       } catch (err) {
         console.error(
           "Erro ao inserir no Supabase:",
-          item.url,
+          url,
           err.response?.status,
           err.response?.data
         );
