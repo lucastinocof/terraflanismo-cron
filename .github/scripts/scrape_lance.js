@@ -37,31 +37,25 @@ async function main() {
     const items = [];
     const seen = new Set();
 
-    // Seleciona somente cards reais
     $("a[href*='/flamengo/']").each((_, el) => {
       const href = $(el).attr("href");
       if (!href) return;
-
-      // Ignora links inúteis de navegação
       if (href.includes("#") || href.length < 15) return;
 
       const url = href.startsWith("http")
         ? href
         : `https://www.lance.com.br${href}`;
 
-      // evita duplicados
       if (seen.has(url)) return;
       seen.add(url);
 
       let title = $(el).text().trim();
-      title = title.replace(/\s+/g, " "); // normaliza múltiplos espaços
+      title = title.replace(/\s+/g, " ");
 
       if (!title || title.length < 8) return;
 
-      // tenta achar imagem do card
       let image = null;
       const $card = $(el).closest("article, div");
-
       const img =
         $card.find("img").attr("src") ||
         $card.find("img").attr("data-src") ||
@@ -73,11 +67,7 @@ async function main() {
           : `https://www.lance.com.br${img}`;
       }
 
-      items.push({
-        title,
-        url,
-        image,
-      });
+      items.push({ title, url, image });
     });
 
     console.log("Links encontrados no HTML:", items.length);
@@ -87,7 +77,6 @@ async function main() {
       return;
     }
 
-    // Enviar para o Supabase
     for (const item of items.slice(0, 30)) {
       try {
         const res = await axios.post(
