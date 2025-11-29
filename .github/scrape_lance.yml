@@ -22,7 +22,7 @@ jobs:
         run: npm install axios cheerio
 
       - name: Run Lance scraper
-        run: node scripts/scrape_lance.js
+       run: node .github/scripts/scrape_lance.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE: ${{ secrets.SUPABASE_SERVICE_ROLE }}
