@@ -1,3 +1,5 @@
+DEPRECATED – NÃO USAR
+  
 const axios = require("axios");
 const cheerio = require("cheerio");
 
